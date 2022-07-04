@@ -2,28 +2,33 @@
 //  ViewController.swift
 //  ToDoList
 //
-//  Created by daniel on 7/2/22.
+//  Created by daniel on 7/3/22.
 //
 
 import UIKit
 import CoreData
 
 class ViewController: UIViewController {
-    @IBOutlet weak var CenterLabel: UILabel!
     
-    func SaveNewTask(var tasktext: String) {
+    var tasklist: [NSManagedObject] = []
+
+    @IBOutlet weak var tableView: UITableView!
+    
+    func SaveNewTask(tasktext: String) {
+        
         guard let AppDelegate = UIApplication.shared.delegate as? AppDelegate else {
             return
         }
-        
+            
         let context = AppDelegate.persistentContainer.viewContext
-        let taskentity = NSEntityDescription.entity(forEntityName: "ToDoList", in: context)!
+        let taskentity = NSEntityDescription.entity(forEntityName: "TaskEntity", in: context)!
         let task = NSManagedObject(entity: taskentity, insertInto: context)
-        
+            
         task.setValue(tasktext, forKeyPath: "task")
-        
+            
         do {
             try context.save()
+            self.tasklist.append(task)
         }
         catch {
             // error
@@ -42,10 +47,9 @@ class ViewController: UIViewController {
         // add the buttons/actions to the view controller
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-
-            // this code runs when the user hits the "save" button
-            
-            self.SaveNewTask(var: alertController.textFields![0].text!)
+            let text: String = alertController.textFields![0].text!
+            self.SaveNewTask(tasktext: text)
+            self.tableView.reloadData()
         }
 
         alertController.addAction(cancelAction)
@@ -53,11 +57,25 @@ class ViewController: UIViewController {
 
         present(alertController, animated: true, completion: nil)
     }
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        title = "Tasks"
+        tableView.register(UITableViewCell.self,forCellReuseIdentifier: "Cell")
     }
 }
 
+extension ViewController: UITableViewDataSource {
+  
+  func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+      return tasklist.count
+  }
+  
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    let task = tasklist[indexPath.row]
+    let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+    cell.textLabel?.text = task.value(forKeyPath: "task") as? String
+    return cell
+  }
+}
