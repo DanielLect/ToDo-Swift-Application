@@ -13,6 +13,25 @@ class ViewController: UIViewController {
     var tasklist: [NSManagedObject] = []
 
     @IBOutlet weak var tableView: UITableView!
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+      
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TaskEntity")
+      
+        do {
+            tasklist = try context.fetch(fetchRequest)
+        } catch let error as NSError {
+            print("Could not fetch. \(error), \(error.userInfo)")
+        }
+    }
+
     
     func SaveNewTask(tasktext: String) {
         
